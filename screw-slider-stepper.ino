@@ -18,8 +18,8 @@ int read_LCD_buttons()
  if (adc_key_in > 1000) return btnNONE;
  if (adc_key_in < 50)   return btnRIGHT;  
  if (adc_key_in < 250)  return btnUP; 
- if (adc_key_in < 450)  return btnDOWN; 
- if (adc_key_in < 650)  return btnLEFT; 
+ if (adc_key_in < 350)  return btnDOWN; //default: 450
+ if (adc_key_in < 600)  return btnLEFT; //default: 650
  if (adc_key_in < 850)  return btnSELECT;  
 
  return btnNONE; 
@@ -32,10 +32,10 @@ int read_LCD_buttons()
 #define motorPin3  A4     // IN3 on the ULN2003 driver 1
 #define motorPin4  A5     // IN4 on the ULN2003 driver 1
 
-// Initialize with pin sequence IN1-IN3-IN2-IN4 for using the AccelStepper with 28BYJ-48
 AccelStepper stepper1(HALFSTEP, motorPin1, motorPin3, motorPin2, motorPin4);
 
 void setup() {
+  Serial.begin(9600);
   lcd.begin(16, 2);
   stepper1.setMaxSpeed(1500.0);
   stepper1.setAcceleration(100.0);
@@ -52,12 +52,38 @@ void setup() {
    lcd.clear();
 }//--(end setup )---
 
-int aStep = 2000;
+int aStep = 500;
+int calMM = 0;
+int calStep = aStep/10;
 bool inMainMenu = true;
 int milimeter = 0;
-
+int menu = 0;
+bool calRunFirst = true;
 
 void loop() {
+if (menu == 0)
+{
+  lcd.setCursor(0,1);
+  lcd.print("<Gerak");
+  lcd.setCursor(11,1);
+  lcd.print("Kal.>");
+  lcd_key = read_LCD_buttons();
+  Serial.println(adc_key_in);
+  if (lcd_key == btnLEFT) {
+    menu = 1;
+    delay(500);
+    lcd.clear();
+  }
+  if (lcd_key == btnRIGHT) {
+    menu = 2;
+    delay(500);
+    lcd.clear();
+  }
+}
+
+
+if (menu == 1)
+{
   lcd.setCursor(3,0);
   lcd.print(stepper1.currentPosition());
   lcd.setCursor(3,1);
@@ -70,16 +96,64 @@ void loop() {
   }
   stepper1.moveTo(aStep*milimeter);
   stepper1.run();
+
   
   lcd_key = read_LCD_buttons();
-  if (lcd_key == 1) {
+  if (lcd_key == btnUP) {
     milimeter++;
-    delay(500);
-    lcd.clear();
+    delay(500);lcd.clear();
   }
-  if (lcd_key == 2) {
+  if (lcd_key == btnDOWN) {
     milimeter--;
-    delay(500);
-    lcd.clear();
+    delay(500);lcd.clear();
   }
+  if (lcd_key == btnLEFT) {
+    menu = 0;
+    delay(500);lcd.clear();
+  }
+}
+
+
+
+if (menu == 2)
+{
+if (calRunFirst)
+{
+  stepper1.setCurrentPosition(0);
+  lcd.setCursor(0,0);
+  lcd.print("Set posisi saat");
+  lcd.setCursor(0,1);
+  lcd.print("plat berdempet");
+  delay(1000);
+  lcd.setCursor(0,1);
+  lcd.print("plat berdempet.");
+  delay(1000);
+  lcd.setCursor(0,1);
+  lcd.print("plat berdempet..");
+  delay(1000);
+  calRunFirst = false;
+  lcd.clear();
+}
+  lcd.setCursor(3,0);
+  lcd.print(stepper1.currentPosition());
+  lcd.setCursor(3,1);
+  lcd.print(calMM);
+  stepper1.moveTo(calMM*calStep);
+  stepper1.run();
+
+  lcd_key = read_LCD_buttons();
+  if (lcd_key == btnUP) {
+    calMM++;
+    delay(500);lcd.clear();
+  }
+  if (lcd_key == btnDOWN) {
+    calMM--;
+    delay(500);lcd.clear();
+  }
+  if (lcd_key == btnSELECT) {
+    stepper1.setCurrentPosition(0);
+    menu = 0;
+    delay(500);lcd.clear();
+  }
+}
 }
