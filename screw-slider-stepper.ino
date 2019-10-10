@@ -52,17 +52,19 @@ void setup() {
    lcd.clear();
 }//--(end setup )---
 
-int aStep = 500;
+int aStep = 525;
 int calMM = 0;
 int calStep = aStep/10;
 bool inMainMenu = true;
 int milimeter = 0;
 int menu = 0;
-bool calRunFirst = true;
+bool calRunOnce = true;
+bool moveRunOnce = true;
 
 void loop() {
 if (menu == 0)
 {
+  calRunOnce = true;
   lcd.setCursor(0,1);
   lcd.print("<Gerak");
   lcd.setCursor(11,1);
@@ -84,6 +86,11 @@ if (menu == 0)
 
 if (menu == 1)
 {
+if (moveRunOnce)
+{
+  milimeter = 0;
+  moveRunOnce = false;
+}
   lcd.setCursor(3,0);
   lcd.print(stepper1.currentPosition());
   lcd.setCursor(3,1);
@@ -117,8 +124,9 @@ if (menu == 1)
 
 if (menu == 2)
 {
-if (calRunFirst)
+if (calRunOnce)
 {
+  calMM = 0;
   stepper1.setCurrentPosition(0);
   lcd.setCursor(0,0);
   lcd.print("Set posisi saat");
@@ -131,7 +139,7 @@ if (calRunFirst)
   lcd.setCursor(0,1);
   lcd.print("plat berdempet..");
   delay(1000);
-  calRunFirst = false;
+  calRunOnce = false;
   lcd.clear();
 }
   lcd.setCursor(3,0);
@@ -148,6 +156,14 @@ if (calRunFirst)
   }
   if (lcd_key == btnDOWN) {
     calMM--;
+    delay(500);lcd.clear();
+  }
+  if (lcd_key == btnRIGHT) {
+    calMM = calMM + 10;
+    delay(500);lcd.clear();
+  }
+  if (lcd_key == btnLEFT) {
+    calMM = calMM - 10;
     delay(500);lcd.clear();
   }
   if (lcd_key == btnSELECT) {
