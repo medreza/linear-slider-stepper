@@ -13,15 +13,13 @@ int adc_key_in  = 0;
 #define btnSELECT 4
 #define btnNONE   5
 
-int aStep = 525;
-int calMM = 0;
-int calStep = aStep/10;
-bool inMainMenu = true;
+int mmStep = 525; //The number of motor step which approx. equal 1 mm slider movement. Change this to match your system.
+double calMM = 0;
 int milimeter = 0;
 int menu = 0;
 bool calRunOnce = true;
 bool moveRunOnce = true;
-unsigned long time_now1 = 0, time_now2 = 0, time_now3 = 0 ;
+unsigned long time_now1 = 0, time_now2 = 0, time_now3 = 0;
 
 int read_LCD_buttons()
 {
@@ -103,8 +101,8 @@ void loop() {
     if (milimeter < 0) {
       milimeter = 0;
     }
-    if (milimeter > 11) {
-      milimeter = 11;
+    if (milimeter > 15) {
+      milimeter = 15;
     }
     lcd.setCursor(5,0);
     lcd.print("Jarak");
@@ -114,7 +112,7 @@ void loop() {
     lcd.print("mm");
     lcd.setCursor(0,1);
     lcd.print("<");
-    stepper1.moveTo(aStep*milimeter);
+    stepper1.moveTo(mmStep*milimeter);
     stepper1.run();
 
     if (stepper1.isRunning())
@@ -169,13 +167,15 @@ void loop() {
       calRunOnce = false;
       lcd.clear();
     }
-      lcd.setCursor(3,0);
+      lcd.setCursor(1,0);
       lcd.print("Posisi:");
-      lcd.setCursor(11,0);
-      lcd.print(calMM);
+      lcd.setCursor(9,0);
+      lcd.print(calMM,1);
+      lcd.setCursor(13,0);
+      lcd.print("mm");
       lcd.setCursor(0,1);
       lcd.print("Select");
-      stepper1.moveTo(calMM*calStep);
+      stepper1.moveTo(calMM*mmStep);
       stepper1.run();
     
     if (stepper1.isRunning())
@@ -192,27 +192,28 @@ void loop() {
     lcd_key = read_LCD_buttons();
     if (lcd_key == btnUP) 
     {
-      calMM++;
+      calMM = calMM + 0.1;
       delay(500);lcd.clear();
     }
     if (lcd_key == btnDOWN) 
     {
-      calMM--;
+      calMM = calMM - 0.1;
       delay(500);lcd.clear();
     }
     if (lcd_key == btnRIGHT) 
     {
-      calMM = calMM + 10;
+      calMM = calMM + 1;
       delay(500);lcd.clear();
     }
     if (lcd_key == btnLEFT) 
     {
-      calMM = calMM - 10;
+      calMM = calMM - 1;
       delay(500);lcd.clear();
     }
     if (lcd_key == btnSELECT) 
     {
       stepper1.setCurrentPosition(0);
+      milimeter = 0;
       lcd.setCursor(0,1);
       lcd.print("OK    ");
       delay(500);
